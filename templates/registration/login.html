@@ -1,0 +1,17 @@
+﻿{% extends 'base.html' %}
+{% block title %}PawMate | Вход{% endblock %}
+{% block content %}
+<section class="card auth-card">
+  <div class="badge">🔐 Возвращение в PawMate</div>
+  <h1>С возвращением</h1>
+  <p class="form-meta">Продолжим искать новых друзей для твоего питомца.</p>
+  <form method="post" class="stack-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <label>Логин {{ form.username }}</label>
+    <label>Пароль {{ form.password }}</label>
+    <button class="btn primary" type="submit">Войти</button>
+  </form>
+</section>
+{% endblock %}
+

@@ -1,0 +1,68 @@
+﻿{% extends 'base.html' %}
+{% block title %}PawMate | Главная{% endblock %}
+{% block content %}
+<section class="hero">
+  <article class="hero-main">
+    <div class="badge">PawMate — комьюнити владельцев питомцев</div>
+    <h1>Главная площадка для дружбы питомцев и их хозяев</h1>
+    <p class="hero-subtitle">Свайпы, мэтчи, чаты и план встреч в одном месте. PawMate помогает не теряться в переписках и доводить знакомство до реальной прогулки.</p>
+    <div class="hero-actions">
+      {% if user.is_authenticated %}
+        <a class="btn primary" href="{% url 'swipe' %}">Перейти к свайпам</a>
+        <a class="btn ghost" href="{% url 'dashboard' %}">Открыть кабинет</a>
+      {% else %}
+        <a class="btn primary" href="{% url 'register' %}">Создать аккаунт</a>
+        <a class="btn ghost" href="{% url 'login' %}">У меня уже есть аккаунт</a>
+      {% endif %}
+    </div>
+  </article>
+
+  <div class="stats-grid">
+    <article class="card stat-card">
+      <h3>Пользователей</h3>
+      <div class="stat-value blue">{{ total_users }}</div>
+    </article>
+    <article class="card stat-card">
+      <h3>Карточек питомцев</h3>
+      <div class="stat-value orange">{{ total_pets }}</div>
+    </article>
+    <article class="card stat-card">
+      <h3>Успешных мэтчей</h3>
+      <div class="stat-value green">{{ total_matches }}</div>
+    </article>
+  </div>
+
+  <div class="features">
+    <article class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3 class="feature-title">Быстрые свайпы</h3>
+      <p class="feature-text">Управляй свайпами кнопками, мышкой или горячими клавишами.</p>
+    </article>
+    <article class="feature-card">
+      <div class="feature-icon">🎯</div>
+      <h3 class="feature-title">Фильтры под тебя</h3>
+      <p class="feature-text">Город, вид питомца, возраст и активность сегодня.</p>
+    </article>
+    <article class="feature-card">
+      <div class="feature-icon">💬</div>
+      <h3 class="feature-title">Живой чат</h3>
+      <p class="feature-text">Отправка без перезагрузки, быстрые реплики и бейджи непрочитанных.</p>
+    </article>
+  </div>
+
+  <section class="dashboard-layout">
+    <article class="card">
+      <h2>Разделы PawMate</h2>
+      <div class="quick-list" style="margin-top: 10px;">
+        <div><a class="pet-link" href="{% url 'how_it_works' %}">Как это работает</a> — полный флоу от регистрации до встречи.</div>
+        <div><a class="pet-link" href="{% url 'safety' %}">Безопасность</a> — правила общения и офлайн-знакомств.</div>
+        <div><a class="pet-link" href="{% url 'faq' %}">FAQ</a> — ответы на самые частые вопросы.</div>
+      </div>
+    </article>
+    <article class="card">
+      <h2>Зачем это нужно</h2>
+      <p class="form-meta" style="margin-top: 10px;">Питомцам нужна социализация, а владельцам — надежный способ быстро найти компанию для прогулок, игр и новых привычек. PawMate закрывает это одной платформой.</p>
+    </article>
+  </section>
+</section>
+{% endblock %}

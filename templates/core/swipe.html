@@ -1,0 +1,229 @@
+﻿{% extends 'base.html' %}
+{% block title %}PawMate | Свайпы{% endblock %}
+{% block content %}
+<section class="swipe-layout">
+  <section class="swipe-wrap">
+    <article class="card swipe-card" id="swipe-card">
+      {% if first_pet %}
+        <img class="swipe-photo" id="pet-photo" src="{{ first_pet.photo_url|default:'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=900&fit=crop' }}" alt="{{ first_pet.name }}">
+        <h2 class="swipe-name" id="pet-name">{{ first_pet.name }}</h2>
+        <p class="swipe-meta" id="pet-meta">{{ first_pet.species }}{% if first_pet.breed %} • {{ first_pet.breed }}{% endif %} • {{ first_pet.age }} г.</p>
+        <p class="swipe-bio" id="pet-bio">{{ first_pet.bio }}</p>
+        <small class="swipe-owner" id="pet-id" data-id="{{ first_pet.id }}">@{{ first_pet.owner.username }}</small>
+      {% else %}
+        <h2 class="swipe-name" id="pet-name">Карточки закончились</h2>
+        <p class="swipe-meta" id="pet-meta">Новых карточек пока нет</p>
+        <p class="swipe-bio" id="pet-bio">Возвращайся позже — новые анкеты уже в пути.</p>
+        <small class="swipe-owner" id="pet-id" data-id=""></small>
+      {% endif %}
+    </article>
+
+    <div class="row-center">
+      <button class="btn danger" id="nope-btn">Пропустить</button>
+      <button class="btn success" id="like-btn">Лайк</button>
+    </div>
+    <p id="swipe-status" class="swipe-status"></p>
+  </section>
+
+  <aside class="swipe-side">
+    <article class="card">
+      <h3>Фильтры поиска</h3>
+      <form method="post" class="stack-form">
+        {% csrf_token %}
+        <label>Вид {{ pref_form.species }}</label>
+        <label>Город {{ pref_form.city }}</label>
+        <label>Возраст от {{ pref_form.min_age }}</label>
+        <label>Возраст до {{ pref_form.max_age }}</label>
+        <label>Только активные сегодня {{ pref_form.active_today }}</label>
+        <button class="btn ghost" type="submit">Применить фильтры</button>
+      </form>
+    </article>
+
+    <article class="card">
+      <h3>Прогресс сегодня</h3>
+      <p class="form-meta" id="remaining-text">Осталось карточек: {{ remaining }}</p>
+      <div class="progress"><span id="progress-fill"></span></div>
+      <p class="form-meta" id="streak-text">Серия лайков: 0</p>
+    </article>
+
+    <article class="card">
+      <h3>Горячие клавиши</h3>
+      <div class="kbd-list">
+        <div class="kbd-item"><span>Лайк</span><kbd>→</kbd></div>
+        <div class="kbd-item"><span>Пропустить</span><kbd>←</kbd></div>
+        <div class="kbd-item"><span>Чат с мэтчами</span><kbd>C</kbd></div>
+      </div>
+    </article>
+
+    <article class="card">
+      <h3>Подсказка</h3>
+      <p class="form-meta">Тяни карточку вправо или влево мышкой/пальцем. Это быстрее, чем кнопки.</p>
+    </article>
+  </aside>
+</section>
+
+<script>
+const csrfToken = '{{ csrf_token }}';
+const card = document.getElementById('swipe-card');
+const petIdEl = document.getElementById('pet-id');
+const statusEl = document.getElementById('swipe-status');
+const remainingTextEl = document.getElementById('remaining-text');
+const progressFillEl = document.getElementById('progress-fill');
+const streakTextEl = document.getElementById('streak-text');
+
+let isSwiping = false;
+let pointerDown = false;
+let startX = 0;
+let currentX = 0;
+let currentRemaining = Number('{{ remaining|default:0 }}') || 0;
+let startRemaining = currentRemaining;
+let likeStreak = Number(localStorage.getItem('pawmate_like_streak') || '0');
+
+function cardHasPet() {
+  return Boolean(petIdEl.dataset.id);
+}
+
+function updateProgress() {
+  const done = Math.max(0, startRemaining - currentRemaining);
+  const total = Math.max(1, startRemaining);
+  const percent = Math.min(100, Math.round((done / total) * 100));
+  progressFillEl.style.width = percent + '%';
+  remainingTextEl.textContent = `Осталось карточек: ${currentRemaining}`;
+  streakTextEl.textContent = `Серия лайков: ${likeStreak}`;
+}
+
+function setCardTransform(x) {
+  const rotate = x / 25;
+  card.style.transform = `translateX(${x}px) rotate(${rotate}deg)`;
+}
+
+function resetCardTransform() {
+  card.style.transform = '';
+}
+
+function setCard(pet) {
+  const name = document.getElementById('pet-name');
+  const meta = document.getElementById('pet-meta');
+  const bio = document.getElementById('pet-bio');
+  const photo = document.getElementById('pet-photo');
+
+  card.classList.remove('swipe-right', 'swipe-left');
+  resetCardTransform();
+
+  if (!pet) {
+    name.textContent = 'Карточки закончились';
+    meta.textContent = 'Новых карточек пока нет';
+    bio.textContent = 'Возвращайся позже — новые анкеты уже в пути.';
+    petIdEl.dataset.id = '';
+    petIdEl.textContent = '';
+    if (photo) photo.style.display = 'none';
+    return;
+  }
+
+  if (photo) {
+    photo.style.display = 'block';
+    photo.src = pet.photo_url || 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=900&fit=crop';
+  }
+
+  name.textContent = pet.name;
+  meta.textContent = `${pet.species}${pet.breed ? ' • ' + pet.breed : ''} • ${pet.age} г.`;
+  bio.textContent = pet.bio;
+  petIdEl.dataset.id = pet.id;
+  petIdEl.textContent = '@' + pet.owner;
+}
+
+async function swipe(liked) {
+  const petId = petIdEl.dataset.id;
+  if (!petId || isSwiping) return;
+  isSwiping = true;
+
+  card.classList.add(liked ? 'swipe-right' : 'swipe-left');
+
+  const res = await fetch(`/api/swipe/${petId}/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrfToken,
+    },
+    body: JSON.stringify({ liked })
+  });
+
+  if (!res.ok) {
+    statusEl.textContent = 'Не удалось отправить свайп. Попробуй еще раз.';
+    card.classList.remove('swipe-right', 'swipe-left');
+    isSwiping = false;
+    return;
+  }
+
+  const data = await res.json();
+  currentRemaining = typeof data.remaining === 'number' ? data.remaining : currentRemaining;
+
+  if (liked) {
+    likeStreak += 1;
+  } else {
+    likeStreak = 0;
+  }
+  localStorage.setItem('pawmate_like_streak', String(likeStreak));
+
+  if (data.matched) {
+    statusEl.textContent = `Мэтч с ${data.matched_with}. Жми C для перехода в чаты.`;
+  } else {
+    statusEl.textContent = liked ? 'Лайк отправлен.' : 'Карточка пропущена.';
+  }
+
+  updateProgress();
+
+  setTimeout(() => {
+    setCard(data.next_pet);
+    isSwiping = false;
+  }, 220);
+}
+
+card.addEventListener('pointerdown', (e) => {
+  if (!cardHasPet() || isSwiping) return;
+  pointerDown = true;
+  startX = e.clientX;
+  currentX = 0;
+  card.setPointerCapture(e.pointerId);
+});
+
+card.addEventListener('pointermove', (e) => {
+  if (!pointerDown || isSwiping) return;
+  currentX = e.clientX - startX;
+  setCardTransform(currentX);
+});
+
+card.addEventListener('pointerup', async (e) => {
+  if (!pointerDown || isSwiping) return;
+  pointerDown = false;
+  card.releasePointerCapture(e.pointerId);
+
+  if (currentX > 90) {
+    await swipe(true);
+    return;
+  }
+  if (currentX < -90) {
+    await swipe(false);
+    return;
+  }
+  resetCardTransform();
+});
+
+card.addEventListener('pointercancel', () => {
+  pointerDown = false;
+  resetCardTransform();
+});
+
+document.getElementById('nope-btn').addEventListener('click', () => swipe(false));
+document.getElementById('like-btn').addEventListener('click', () => swipe(true));
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') swipe(true);
+  if (e.key === 'ArrowLeft') swipe(false);
+  if (e.key.toLowerCase() === 'c') window.location.href = '{% url 'chats' %}';
+});
+
+updateProgress();
+</script>
+{% endblock %}
+

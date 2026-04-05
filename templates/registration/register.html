@@ -1,0 +1,19 @@
+﻿{% extends 'base.html' %}
+{% block title %}PawMate | Регистрация{% endblock %}
+{% block content %}
+<section class="card auth-card">
+  <div class="badge">🚀 Новый профиль</div>
+  <h1>Создать аккаунт</h1>
+  <p class="form-meta">После регистрации добавь питомца и начни свайпать в пару кликов.</p>
+  <form method="post" class="stack-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <label>Логин {{ form.username }}</label>
+    <label>Email {{ form.email }}</label>
+    <label>Пароль {{ form.password1 }}</label>
+    <label>Повтор пароля {{ form.password2 }}</label>
+    <button class="btn primary" type="submit">Создать аккаунт</button>
+  </form>
+</section>
+{% endblock %}
+

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetSwipe - Чаты</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f23;
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120,119,198,0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255,119,198,0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120,219,255,0.2) 0%, transparent 50%);
+            z-index: -1;
+        }
+        
+        .app {
+            max-width: 1400px;
+            height: 100vh;
+            margin: 0 auto;
+            display: flex;
+        }
+        
+        .chat-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .matches-sidebar {
+            width: 400px;
+            background: rgba(15,15,35,0.98);
+            backdrop-filter: blur(50px);
+            border-right: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .matches-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #00f5ff, #ff00ff, transparent);
+        }
+        
+        .header {
+            padding: 32px 32px 0;
+            position: relative;
+        }
+        
+        .logo {
+            font-size: 34px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00f5ff 0%, #ff00ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px rgba(0,245,255,0.5);
+        }
+
+        .logo-link {
+            display: block;  /* Делает всю область ссылки кликабельной */
+            text-decoration: none;  /* Убирает подчеркивание */
+            color: inherit;  /* Сохраняет цвет текста */
+        }
+
+        .logo-link:hover {
+            opacity: 0.8;  /* Эффект при наведении */
+        }
+
+        .logo {
+            cursor: pointer;  /* Курсор-указатель при наведении */
+        }
+        
+        .matches-header {
+            padding: 24px 32px 28px;
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, rgba(0,245,255,0.1) 0%, rgba(255,0,255,0.1) 100%);
+            border-radius: 20px;
+            margin: 0 8px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .matches-container {
+            flex: 1;
+            padding: 20px 24px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+        
+        .match-card {
+            height: 240px;
+            flex-shrink: 0;
+            border-radius: 28px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: translateY(20px) scale(0.95);
+            opacity: 0;
+            animation: cardSlideIn 0.8s forwards;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            background: linear-gradient(145deg, rgba(255,255,255,0.02), rgba(0,0,0,0.3));
+        }
+        
+        .match-card:nth-child(1) { animation-delay: 0.1s; }
+        .match-card:nth-child(2) { animation-delay: 0.2s; }
+        .match-card:nth-child(3) { animation-delay: 0.3s; }
+        .match-card:nth-child(4) { animation-delay: 0.4s; }
+        
+        .match-card:hover {
+            transform: translateY(-20px) scale(1.05) rotateX(8deg) !important;
+            border-color: rgba(0,245,255,0.7);
+            box-shadow: 
+                0 40px 80px rgba(0,0,0,0.5),
+                0 0 60px rgba(0,245,255,0.4);
+        }
+        
+        .match-card.active {
+            border-color: #00f5ff;
+            box-shadow: 
+                0 0 0 4px rgba(0,245,255,0.4),
+                0 40px 80px rgba(0,245,255,0.3);
+            background: linear-gradient(145deg, rgba(0,245,255,0.15), rgba(255,0,255,0.1));
+        }
+        
+        .match-avatar {
+            width: 100%;
+            height: 65%;
+            object-fit: cover;
+            border-radius: 28px 28px 0 0;
+            position: relative;
+        }
+        
+        .match-avatar::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            pointer-events: none;
+        }
+        
+        .match-info {
+            padding: 20px 18px 16px;
+            position: relative;
+        }
+        
+        .match-name {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            color: white;
+            line-height: 1.2;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+        }
+        
+        .match-breed {
+            font-size: 14px;
+            color: rgba(255,255,255,0.85);
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+        
+        .status-chip {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #2ed573, #53f9b1);
+            border-radius: 50%;
+            border: 4px solid rgba(255,255,255,0.95);
+            box-shadow: 0 0 20px rgba(46,213,115,0.9);
+            animation: pulse 2s infinite;
+        }
+        
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            padding: 40px 48px 32px;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+        }
+        
+        .chat-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 24px;
+            object-fit: cover;
+            border: 4px solid rgba(255,255,255,0.3);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+        }
+        
+        .chat-partner {
+            flex: 1;
+        }
+        
+        .chat-name {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, white 0%, #e0e0e0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .chat-status {
+            font-size: 17px;
+            color: #2ed573;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-online {
+            width: 14px;
+            height: 14px;
+            background: #2ed573;
+            border-radius: 50%;
+            box-shadow: 0 0 16px rgba(46,213,115,0.8);
+        }
+        
+        .messages {
+            flex: 1;
+            padding: 48px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .message {
+            display: flex;
+            max-width: 65%;
+            opacity: 0;
+            animation: petMessageIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            transform-origin: bottom;
+        }
+        
+        .message.own {
+            align-self: flex-end;
+        }
+        
+        .message-bubble {
+            padding: 24px 32px;
+            border-radius: 32px;
+            font-size: 18px;
+            line-height: 1.5;
+            position: relative;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            min-height: 28px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .message.other .message-bubble {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 32px 32px 8px 32px;
+        }
+        
+        .message.own .message-bubble {
+            background: linear-gradient(135deg, #00f5ff 0%, #ff00ff 100%);
+            color: #0f0f23;
+            font-weight: 600;
+            border-radius: 32px 32px 32px 8px;
+            box-shadow: 0 16px 56px rgba(0,245,255,0.4);
+        }
+        
+        .message-time {
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 10px;
+            font-weight: 500;
+        }
+        
+        .message.own .message-time {
+            color: rgba(15,15,35,0.8);
+        }
+        
+        .input-area {
+            padding: 40px 48px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .message-input {
+            flex: 1;
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 36px;
+            padding: 24px 36px;
+            color: white;
+            font-size: 18px;
+            backdrop-filter: blur(40px);
+            resize: none;
+            min-height: 28px;
+            max-height: 160px;
+        }
+        
+        .message-input:focus {
+            outline: none;
+            border-color: rgba(0,245,255,0.7);
+            box-shadow: 0 0 0 6px rgba(0,245,255,0.2);
+        }
+        
+        .message-input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+        
+        .send-btn {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00f5ff 0%, #ff00ff 100%);
+            border: none;
+            color: #0f0f23;
+            font-size: 22px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+        }
+        
+        .send-btn:hover:not(:disabled) {
+            transform: scale(1.2) rotate(360deg);
+            box-shadow: 0 20px 64px rgba(0,245,255,0.6);
+        }
+        
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Анимации */
+        @keyframes cardSlideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        @keyframes petMessageIn {
+            0% {
+                opacity: 0;
+                transform: translateY(40px) rotateX(30deg) scale(0.85);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) rotateX(0) scale(1);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        
+        @media (max-width: 768px) {
+            .app { flex-direction: column; max-width: 100vw; }
+            .chat-layout { flex-direction: column; }
+            .matches-sidebar { width: 100%; height: 45vh; }
+            .matches-container { padding: 16px 20px 20px; gap: 10px; }
+            .match-card { height: 200px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="chat-layout">
+            <div class="matches-sidebar">
+                <div class="header">
+                    <a href="welcomeScreen.html" class="logo-link">  
+                        <div class="logo">PetSwipe</div>
+                        </a>
+                </div>
+                <div class="matches-header">Матчи (4)</div>
+                <div class="matches-container" id="matchesList"></div>
+            </div>
+            
+            <div class="chat-main">
+                <div class="chat-header">
+                    <div style="flex: 1;"></div>
+                    <img class="chat-avatar" id="chatAvatar" src="" alt="">
+                    <div class="chat-partner">
+                        <div class="chat-name" id="chatName">Выберите питомца</div>
+                        <div class="chat-status" id="chatStatus">
+                            <div class="status-online"></div> онлайн
+                        </div>
+                    </div>
+                </div>
+                <div class="messages" id="messages">
+                    <div style="text-align: center; color: rgba(255,255,255,0.4); padding: 120px 60px; font-size: 20px;">
+                        Нажмите на карточку питомца 👆
+                    </div>
+                </div>
+                <div class="input-area">
+                    <div class="input-container">
+                        <textarea class="message-input" id="messageInput" placeholder="Напиши что-нибудь питомцу..." rows="1" onkeypress="handleKeyPress(event)"></textarea>
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>✨</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const matches = [
+            {
+                name: 'Макс', breed: 'Хаски',
+                img: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=450&fit=crop',
+                preview: 'Хочешь побегать? 🐕‍🦺',
+                messages: [
+                    { text: 'Привет! Хочешь побегать вместе?', own: false, time: '14:23' },
+                    { text: 'Обожаю бегать!', own: true, time: '14:25' },
+                    { text: 'Давай завтра в 10 утра!', own: false, time: '14:26' }
+                ]
+            },
+            {
+                name: 'Луна', breed: 'Бирманская',
+                img: 'https://images.unsplash.com/photo-1530575791178-1f1921b753d1?w=450&fit=crop',
+                preview: 'Муррр 😻',
+                messages: [
+                    { text: 'Муррр 😻 Обожаю подушки!', own: false, time: '13:45' },
+                    { text: 'Какая милашка!', own: true, time: '13:47' }
+                ]
+            },
+            {
+                name: 'Бадди', breed: 'Французский бульдог',
+                img: 'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=450&fit=crop',
+                preview: 'Покормите? 🥩',
+                messages: [
+                    { text: 'Кто-нибудь покормит? Голодный 😭', own: false, time: '12:10' }
+                ]
+            },
+            {
+                name: 'Рокси', breed: 'Абиссинская',
+                img: 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=450&fit=crop',
+                preview: 'Где лазер???',
+                messages: []
+            }
+        ];
+
+        let currentChat = null;
+
+        function renderMatches() {
+            const container = document.getElementById('matchesList');
+            container.innerHTML = '';
+            
+            matches.forEach((match, index) => {
+                const card = document.createElement('div');
+                card.className = 'match-card';
+                card.onclick = () => openChat(match, card);
+                card.innerHTML = `
+                    <img src="${match.img}" alt="${match.name}" class="match-avatar" loading="lazy">
+                    <div class="status-chip"></div>
+                    <div class="match-info">
+                        <div class="match-name">${match.name}</div>
+                        <div class="match-breed">${match.breed}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openChat(match, cardEl) {
+            document.querySelectorAll('.match-card').forEach(c => c.classList.remove('active'));
+            cardEl.classList.add('active');
+            
+            currentChat = match;
+            document.getElementById('chatAvatar').src = match.img;
+            document.getElementById('chatName').textContent = match.name;
+            renderMessages();
+        }
+
+        function renderMessages() {
+            if (!currentChat) return;
+            const messagesEl = document.getElementById('messages');
+            messagesEl.innerHTML = '';
+            
+            currentChat.messages.forEach((msg, index) => {
+                const messageEl = document.createElement('div');
+                messageEl.className = `message ${msg.own ? 'own' : 'other'}`;
+                messageEl.style.animationDelay = `${index * 0.15}s`;
+                messageEl.innerHTML = `
+                    <div class="message-bubble">${msg.text}</div>
+                    <div class="message-time">${msg.time}</div>
+                `;
+                messagesEl.appendChild(messageEl);
+            });
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text || !currentChat) return;
+            
+            const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            currentChat.messages.push({ text, own: true, time });
+            
+            input.value = '';
+            document.getElementById('sendBtn').disabled = true;
+            renderMessages();
+            
+            setTimeout(() => {
+                if (currentChat) {
+                    const replies = ['Мяу! 😻', 'Гав! 🐕', 'Вау! 😍', 'Уррр! 😺', '🐾💕'];
+                    currentChat.messages.push({
+                        text: replies[Math.floor(Math.random()*replies.length)],
+                        own: false, 
+                        time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+                    });
+                    renderMessages();
+                }
+            }, 1500 + Math.random() * 1500);
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        document.getElementById('messageInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 160) + 'px';
+            document.getElementById('sendBtn').disabled = this.value.trim() === '';
+        });
+
+        renderMatches();
+    </script>
+</body>
+</html>

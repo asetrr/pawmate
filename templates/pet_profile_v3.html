@@ -1,0 +1,329 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetSwipe - Создать профиль</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 70%, #0f0f23 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            right: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            background: rgba(255,255,255,0.05);
+            padding: 16px 24px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo-small {
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00f5ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-btn {
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+            background: linear-gradient(135deg, #00f5ff, #ff00ff);
+            color: #0f0f23;
+            box-shadow: 0 8px 32px rgba(0,245,255,0.4);
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 48px rgba(0,245,255,0.6);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 140px auto 0;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(40px);
+            border-radius: 28px;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 48px;
+            box-shadow: 0 30px 100px rgba(0,245,255,0.2);
+        }
+
+        .title {
+            font-size: 36px;
+            font-weight: 900;
+            text-align: center;
+            background: linear-gradient(135deg, #00f5ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 40px;
+        }
+
+        .form-list {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 20px 24px;
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #00f5ff;
+            background: rgba(255,255,255,0.15);
+            box-shadow: 0 0 0 4px rgba(0,245,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .input-field::placeholder {
+            color: rgba(255,255,255,0.4);
+            font-weight: 500;
+        }
+
+        .input-label {
+            position: absolute;
+            left: 24px;
+            top: 20px;
+            color: rgba(255,255,255,0.6);
+            font-size: 16px;
+            font-weight: 600;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus + .input-label,
+        .input-field:not(:placeholder-shown) + .input-label {
+            top: -10px;
+            left: 16px;
+            font-size: 13px;
+            color: #00f5ff;
+            background: rgba(15,15,35,0.9);
+            padding: 0 8px;
+            border-radius: 8px;
+        }
+
+        .select-field {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='rgba(255,255,255,0.6)' viewBox='0 0 20 20'%3e%3cpath d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'/%3e%3c/svg%3e");
+            background-position: right 16px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 56px;
+        }
+
+        .photo-section {
+            text-align: center;
+            padding: 32px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 24px;
+            border: 2px dashed rgba(0,245,255,0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .photo-section:hover {
+            border-color: #00f5ff;
+            background: rgba(0,245,255,0.08);
+        }
+
+        .photo-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.7;
+        }
+
+        .photo-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .photo-subtext {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .photo-preview {
+            width: 100%;
+            height: 200px;
+            border-radius: 20px;
+            object-fit: cover;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .create-btn {
+            width: 100%;
+            padding: 24px;
+            background: linear-gradient(135deg, #00f5ff, #ff00ff);
+            color: #0f0f23;
+            border: none;
+            border-radius: 24px;
+            font-size: 20px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 32px;
+            box-shadow: 0 20px 60px rgba(0,245,255,0.4);
+            transition: all 0.4s ease;
+        }
+
+        .create-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 30px 80px rgba(0,245,255,0.6);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 120px 16px 0;
+                padding: 32px 24px;
+            }
+
+            .title {
+                font-size: 28px;
+            }
+
+            .input-field {
+                padding: 18px 20px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-small">PetSwipe</div>
+        <a href="landing.html" class="nav-btn">← Назад</a>
+    </div>
+
+    <div class="container">
+        <h1 class="title">Создать карточку питомца</h1>
+
+        <form class="pet-form">
+            <div class="form-list">
+                <div class="input-group">
+                    <input type="text" class="input-field" placeholder=" " required>
+                    <label class="input-label">Имя питомца</label>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" class="input-field" placeholder=" " required list="animals">
+                    <label class="input-label">Тип животного</label>
+                    <datalist id="animals">
+                        <option value="Собака">
+                        <option value="Кот">
+                        <option value="Хомяк">
+                        <option value="Попугай">
+                        <option value="Рыбка">
+                        <option value="Кролик">
+                        <option value="Хорька">
+                        <option value="Морская свинка">
+                    </datalist>
+                </div>
+
+                <div class="input-group">
+                    <input type="number" class="input-field" placeholder=" " min="0" max="30" required>
+                    <label class="input-label">Возраст (лет)</label>
+                </div>
+
+                <div class="input-group">
+                    <select class="input-field select-field" required>
+                        <option value="" disabled selected> </option>
+                        <option value="male">♂ Самец</option>
+                        <option value="female">♀ Самка</option>
+                    </select>
+                    <label class="input-label">Пол питомца</label>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" class="input-field" placeholder=" ">
+                    <label class="input-label">Порода</label>
+                </div>
+
+                <div class="photo-section">
+                    <div class="photo-icon">📸</div>
+                    <div class="photo-text">Добавить фото</div>
+                    <div class="photo-subtext">Кликни чтобы загрузить (PNG/JPG)</div>
+                    <input type="file" id="photo-upload" accept="image/*" style="display: none;">
+                    <img class="photo-preview" id="photo-preview">
+                </div>
+
+                <div class="input-group">
+                    <textarea class="input-field" rows="4" placeholder=" " required></textarea>
+                    <label class="input-label">Описание питомца</label>
+                </div>
+
+                <button type="submit" class="create-btn">🚀 Создать профиль</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const photoSection = document.querySelector('.photo-section');
+        const photoInput = document.getElementById('photo-upload');
+        const photoPreview = document.getElementById('photo-preview');
+        const photoIcon = document.querySelector('.photo-icon');
+        const photoText = document.querySelector('.photo-text');
+        const photoSubtext = document.querySelector('.photo-subtext');
+
+        photoSection.addEventListener('click', () => photoInput.click());
+
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    photoPreview.src = e.target.result;
+                    photoPreview.style.display = 'block';
+                    photoIcon.style.display = 'none';
+                    photoText.style.display = 'none';
+                    photoSubtext.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.querySelector('.pet-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('✅ Карточка питомца создана!');
+        });
+    </script>
+</body>
+</html>
