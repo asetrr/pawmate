@@ -1,0 +1,66 @@
+﻿{% extends 'base.html' %}
+{% block title %}PawMate | Модерация{% endblock %}
+{% block content %}
+<section class="dashboard-layout">
+  <article class="card">
+    <h2>Мои жалобы</h2>
+    {% if reports %}
+      <div class="match-list" style="margin-top: 10px;">
+        {% for report in reports %}
+          <div class="match-chip">
+            <div>
+              <strong>{{ report.reason }}</strong>
+              <div class="form-meta">
+                {% if report.pet %}Питомец: {{ report.pet.name }}{% endif %}
+                {% if report.match %} · Матч #{{ report.match.id }}{% endif %}
+                · {{ report.created_at|date:'d.m H:i' }}
+              </div>
+            </div>
+            <span class="badge">{{ report.get_status_display }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="empty-state" style="margin-top: 10px;">Жалоб пока нет.</p>
+    {% endif %}
+  </article>
+
+  <article class="card">
+    <h2>Заблокированные пользователи</h2>
+    {% if blocks %}
+      <div class="match-list" style="margin-top: 10px;">
+        {% for block in blocks %}
+          <div class="match-chip" data-user-row="{{ block.blocked_user_id }}">
+            <div>
+              <strong>@{{ block.blocked_user.username }}</strong>
+              <div class="form-meta">Заблокирован: {{ block.created_at|date:'d.m H:i' }}</div>
+            </div>
+            <button class="btn ghost" type="button" data-unblock="{{ block.blocked_user_id }}">Разблокировать</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="empty-state" style="margin-top: 10px;">Список блокировок пуст.</p>
+    {% endif %}
+  </article>
+</section>
+
+<script>
+const csrf = '{{ csrf_token }}';
+document.querySelectorAll('button[data-unblock]').forEach((btn) => {
+  btn.addEventListener('click', async () => {
+    const uid = btn.dataset.unblock;
+    const body = new FormData();
+    body.append('csrfmiddlewaretoken', csrf);
+    const res = await fetch(`/api/users/${uid}/unblock/`, {
+      method: 'POST',
+      body,
+      headers: { 'X-CSRFToken': csrf }
+    });
+    if (!res.ok) return;
+    const row = document.querySelector(`[data-user-row="${uid}"]`);
+    if (row) row.remove();
+  });
+});
+</script>
+{% endblock %}

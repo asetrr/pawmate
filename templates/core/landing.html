@@ -1,67 +1,141 @@
 ﻿{% extends 'base.html' %}
 {% block title %}PawMate | Главная{% endblock %}
+{% block page_class %}landing-page{% endblock %}
 {% block content %}
-<section class="hero">
-  <article class="hero-main">
-    <div class="badge">PawMate — комьюнити владельцев питомцев</div>
-    <h1>Главная площадка для дружбы питомцев и их хозяев</h1>
-    <p class="hero-subtitle">Свайпы, мэтчи, чаты и план встреч в одном месте. PawMate помогает не теряться в переписках и доводить знакомство до реальной прогулки.</p>
-    <div class="hero-actions">
-      {% if user.is_authenticated %}
-        <a class="btn primary" href="{% url 'swipe' %}">Перейти к свайпам</a>
-        <a class="btn ghost" href="{% url 'dashboard' %}">Открыть кабинет</a>
-      {% else %}
-        <a class="btn primary" href="{% url 'register' %}">Создать аккаунт</a>
-        <a class="btn ghost" href="{% url 'login' %}">У меня уже есть аккаунт</a>
-      {% endif %}
-    </div>
-  </article>
-
-  <div class="stats-grid">
-    <article class="card stat-card">
-      <h3>Пользователей</h3>
-      <div class="stat-value blue">{{ total_users }}</div>
-    </article>
-    <article class="card stat-card">
-      <h3>Карточек питомцев</h3>
-      <div class="stat-value orange">{{ total_pets }}</div>
-    </article>
-    <article class="card stat-card">
-      <h3>Успешных мэтчей</h3>
-      <div class="stat-value green">{{ total_matches }}</div>
-    </article>
-  </div>
-
-  <div class="features">
-    <article class="feature-card">
-      <div class="feature-icon">⚡</div>
-      <h3 class="feature-title">Быстрые свайпы</h3>
-      <p class="feature-text">Управляй свайпами кнопками, мышкой или горячими клавишами.</p>
-    </article>
-    <article class="feature-card">
-      <div class="feature-icon">🎯</div>
-      <h3 class="feature-title">Фильтры под тебя</h3>
-      <p class="feature-text">Город, вид питомца, возраст и активность сегодня.</p>
-    </article>
-    <article class="feature-card">
-      <div class="feature-icon">💬</div>
-      <h3 class="feature-title">Живой чат</h3>
-      <p class="feature-text">Отправка без перезагрузки, быстрые реплики и бейджи непрочитанных.</p>
-    </article>
-  </div>
-
-  <section class="dashboard-layout">
-    <article class="card">
-      <h2>Разделы PawMate</h2>
-      <div class="quick-list" style="margin-top: 10px;">
-        <div><a class="pet-link" href="{% url 'how_it_works' %}">Как это работает</a> — полный флоу от регистрации до встречи.</div>
-        <div><a class="pet-link" href="{% url 'safety' %}">Безопасность</a> — правила общения и офлайн-знакомств.</div>
-        <div><a class="pet-link" href="{% url 'faq' %}">FAQ</a> — ответы на самые частые вопросы.</div>
+<section class="hero hero-bleed">
+  <div class="shell hero-bleed-inner landing-hero-grid">
+    <article class="hero-main hero-copy">
+      <div class="badge">PawMate — комьюнити владельцев питомцев</div>
+      <h1>Найди друзей для питомца и компанию для прогулок</h1>
+      <p class="hero-subtitle">Современный сервис знакомств для хозяев питомцев: свайпы, мэтчи, чат и договоренности о встречах в одном ритме.</p>
+      <div class="hero-actions">
+        {% if user.is_authenticated %}
+          <a class="btn primary" href="{% url 'swipe' %}">Начать свайп</a>
+          <a class="btn ghost" href="{% url 'chats' %}">Открыть чаты</a>
+        {% else %}
+          <a class="btn primary" href="{% url 'register' %}">Создать аккаунт</a>
+          <a class="btn ghost" href="{% url 'login' %}">Войти</a>
+        {% endif %}
       </div>
     </article>
-    <article class="card">
-      <h2>Зачем это нужно</h2>
-      <p class="form-meta" style="margin-top: 10px;">Питомцам нужна социализация, а владельцам — надежный способ быстро найти компанию для прогулок, игр и новых привычек. PawMate закрывает это одной платформой.</p>
+
+    <aside class="hero-device" aria-hidden="true">
+      <div class="device-head">Сегодня рядом с тобой</div>
+      <div class="device-list">
+        <div class="device-row">
+          <span>Луна • 2 года</span>
+          <strong>Москва</strong>
+        </div>
+        <div class="device-row">
+          <span>Макс • 4 года</span>
+          <strong>Казань</strong>
+        </div>
+        <div class="device-row">
+          <span>Рокси • 1 год</span>
+          <strong>СПб</strong>
+        </div>
+      </div>
+      <div class="device-chat">
+        <div class="device-bubble in">Привет! Гуляете вечером?</div>
+        <div class="device-bubble out">Да, в 19:30 в парке ✨</div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section class="shell landing-flow">
+  <section class="metric-row">
+    <article class="metric-item">
+      <span>Пользователей</span>
+      <strong>{{ total_users }}</strong>
+    </article>
+    <article class="metric-item">
+      <span>Карточек питомцев</span>
+      <strong>{{ total_pets }}</strong>
+    </article>
+    <article class="metric-item">
+      <span>Успешных мэтчей</span>
+      <strong>{{ total_matches }}</strong>
+    </article>
+  </section>
+
+  <section class="benefits-grid">
+    <article class="benefit">
+      <h3>Быстрый старт</h3>
+      <p>Создаешь профиль питомца, включаешь фильтры и сразу видишь релевантные карточки рядом.</p>
+    </article>
+    <article class="benefit">
+      <h3>Чат как в мессенджере</h3>
+      <p>Без перезагрузок и лишних шагов: переписка, быстрые реплики и планирование встречи в одном окне.</p>
+    </article>
+    <article class="benefit">
+      <h3>Безопасное общение</h3>
+      <p>Жалобы, блокировки и правила помогают поддерживать комфортную и дружелюбную среду.</p>
+    </article>
+  </section>
+
+  <section class="journey-grid">
+    <article class="journey-step">
+      <div class="step-dot">1</div>
+      <h4>Создай профиль</h4>
+      <p>Добавь питомца и расскажи о характере, привычках и предпочтениях прогулки.</p>
+    </article>
+    <article class="journey-step">
+      <div class="step-dot">2</div>
+      <h4>Свайпай и мэтчись</h4>
+      <p>Используй фильтры по городу, виду и возрасту, чтобы находить подходящую компанию быстрее.</p>
+    </article>
+    <article class="journey-step">
+      <div class="step-dot">3</div>
+      <h4>Договаривайся о встрече</h4>
+      <p>Обсуди детали в чате и закрепи план прогулки, чтобы знакомство дошло до реала.</p>
+    </article>
+  </section>
+
+  <section class="landing-cta">
+    <div>
+      <h2>Готов начать?</h2>
+      <p>Собери ленту из питомцев рядом и договорись о первой прогулке уже сегодня.</p>
+    </div>
+    <div class="hero-actions">
+      {% if user.is_authenticated %}
+        <a class="btn primary" href="{% url 'swipe' %}">К свайпам</a>
+        <a class="btn ghost" href="{% url 'dashboard' %}">Мой профиль</a>
+      {% else %}
+        <a class="btn primary" href="{% url 'register' %}">Зарегистрироваться</a>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="landing-info-grid">
+    <article class="info-panel">
+      <h3>Как это работает</h3>
+      <ul class="info-list">
+        <li>Создай профиль питомца и добавь фото.</li>
+        <li>Свайпай карточки по интересам и фильтрам.</li>
+        <li>После мэтча переходи в чат и назначай прогулку.</li>
+      </ul>
+      <a class="pet-link" href="{% url 'how_it_works' %}">Подробнее о сценарии</a>
+    </article>
+
+    <article class="info-panel">
+      <h3>Безопасность</h3>
+      <ul class="info-list">
+        <li>Для первой встречи выбирай публичное место.</li>
+        <li>Фиксируй план встречи прямо в чате.</li>
+        <li>Используй жалобы и блокировки при дискомфорте.</li>
+      </ul>
+      <a class="pet-link" href="{% url 'safety' %}">Полные рекомендации</a>
+    </article>
+
+    <article class="info-panel">
+      <h3>FAQ</h3>
+      <ul class="info-list">
+        <li>Сколько питомцев можно добавить? Любое количество.</li>
+        <li>Почему карточки закончились? Сузились фильтры.</li>
+        <li>Как попасть в чат? Нужен мэтч после лайка.</li>
+      </ul>
+      <a class="pet-link" href="{% url 'faq' %}">Все вопросы и ответы</a>
     </article>
   </section>
 </section>

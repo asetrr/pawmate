@@ -5,17 +5,28 @@
   <div class="badge">📝 Карточка питомца</div>
   <h1>{{ title }}</h1>
   <p class="form-meta">Чем подробнее профиль, тем точнее будут мэтчи.</p>
-  <form method="post" class="stack-form">
+  <form method="post" class="stack-form" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.non_field_errors }}
-    <label>Имя {{ form.name }}</label>
-    <label>Вид {{ form.species }}</label>
-    <label>Порода {{ form.breed }}</label>
-    <label>Возраст {{ form.age }}</label>
-    <label>Пол {{ form.gender }}</label>
-    <label>Город {{ form.city }}</label>
-    <label>Фото (URL) {{ form.photo_url }}</label>
-    <label>Описание {{ form.bio }}</label>
+    <label>Имя {{ form.name }}{{ form.name.errors }}</label>
+    <label>Вид {{ form.species }}{{ form.species.errors }}</label>
+    <label>Порода {{ form.breed }}{{ form.breed.errors }}</label>
+    <label>Возраст {{ form.age }}{{ form.age.errors }}</label>
+    <label>Пол {{ form.gender }}{{ form.gender.errors }}</label>
+    <label>Город {{ form.city }}{{ form.city.errors }}</label>
+    <label>
+      Фото (файл)
+      {{ form.photo }}
+      <small class="form-meta">JPG/PNG/WEBP, до 6 МБ.</small>
+      {{ form.photo.errors }}
+    </label>
+    <label>
+      Фото (URL)
+      {{ form.photo_url }}
+      <small class="form-meta">Если не загружаешь файл, укажи ссылку на изображение.</small>
+      {{ form.photo_url.errors }}
+    </label>
+    <label>Описание {{ form.bio }}{{ form.bio.errors }}</label>
     <button class="btn primary" type="submit">Сохранить карточку</button>
   </form>
 </section>

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}PawMate | Мод-панель{% endblock %}
+{% block content %}
+<section class="card">
+  <div class="row-between">
+    <h2>Очередь жалоб</h2>
+    <div class="quick-replies">
+      <a class="btn ghost" href="?status=open">Открытые</a>
+      <a class="btn ghost" href="?status=reviewed">Проверенные</a>
+      <a class="btn ghost" href="?status=closed">Закрытые</a>
+    </div>
+  </div>
+
+  {% if reports %}
+    <div class="moderation-table">
+      {% for report in reports %}
+        <div class="moderation-row" data-report-row="{{ report.id }}">
+          <div>
+            <strong>{{ report.reason }}</strong>
+            <div class="form-meta">
+              Репортер: @{{ report.reporter.username }}
+              {% if report.target_user %} · Нарушитель: @{{ report.target_user.username }}{% endif %}
+              {% if report.pet %} · Питомец: {{ report.pet.name }}{% endif %}
+              {% if report.message %} · Сообщение #{{ report.message.id }}{% endif %}
+              · {{ report.created_at|date:'d.m H:i' }}
+            </div>
+          </div>
+          <div class="moderation-actions">
+            <span class="badge" data-report-status="{{ report.id }}">{{ report.get_status_display }}</span>
+            <button type="button" class="tiny-btn" data-action="open" data-report-id="{{ report.id }}">Открыть</button>
+            <button type="button" class="tiny-btn" data-action="reviewed" data-report-id="{{ report.id }}">Проверено</button>
+            <button type="button" class="tiny-btn" data-action="closed" data-report-id="{{ report.id }}">Закрыть</button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty-state">Жалоб по выбранному фильтру пока нет.</p>
+  {% endif %}
+</section>
+
+<script>
+const csrf = '{{ csrf_token }}';
+document.querySelectorAll('[data-report-id]').forEach((btn) => {
+  btn.addEventListener('click', async () => {
+    const reportId = btn.dataset.reportId;
+    const action = btn.dataset.action;
+    const body = new FormData();
+    body.append('action', action);
+    body.append('csrfmiddlewaretoken', csrf);
+    const res = await fetch(`/api/moderation/reports/${reportId}/action/`, {
+      method: 'POST',
+      body,
+      headers: { 'X-CSRFToken': csrf }
+    });
+    if (!res.ok) return;
+    const payload = await res.json();
+    const badge = document.querySelector(`[data-report-status="${reportId}"]`);
+    if (badge) badge.textContent = payload.new_status;
+  });
+});
+</script>
+{% endblock %}

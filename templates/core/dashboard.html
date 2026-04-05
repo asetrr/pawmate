@@ -27,7 +27,7 @@
       <div class="pets-panel">
         {% for pet in pets %}
         <article class="pet-item">
-          <img src="{{ pet.photo_url|default:'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=800&fit=crop' }}" alt="{{ pet.name }}">
+          <img src="{{ pet.display_photo|default:'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=800&fit=crop' }}" alt="{{ pet.name }}">
           <div>
             <h3>{{ pet.name }}</h3>
             <p class="pet-meta">{{ pet.species }}{% if pet.breed %} • {{ pet.breed }}{% endif %} • {{ pet.age }} г.</p>
@@ -47,10 +47,10 @@
       {% if recent_matches %}
         <div class="match-list">
           {% for match in recent_matches %}
-          <div class="match-chip">
+          <a class="match-chip match-chip-link" href="{% url 'chats' %}?match={{ match.id }}">
             <span>{{ match.pet.name }}</span>
-            <a class="pet-link" href="{% url 'chats' %}?match={{ match.id }}">Чат</a>
-          </div>
+            <strong>Чат</strong>
+          </a>
           {% endfor %}
         </div>
       {% else %}
@@ -59,27 +59,111 @@
     </article>
 
     <article class="card">
-      <h3>Что делать дальше</h3>
+      <div class="row-between">
+        <h3>Что делать дальше</h3>
+        <span class="form-meta">{{ onboarding_done }}/{{ onboarding_items|length }}</span>
+      </div>
       <div class="quick-list">
-        <div>1. Заполни описание питомца подробно.</div>
-        <div>2. Свайпай минимум 10 карточек в день.</div>
-        <div>3. После мэтча сразу пиши первое сообщение.</div>
+        {% for item in onboarding_items %}
+          <div class="{% if item.done %}quick-item-done{% endif %}">
+            {% if item.done %}✅{% else %}•{% endif %} {{ item.text }}
+            {% if not item.done %}
+              <a class="pet-link" href="{% url item.link %}">{{ item.link_label }}</a>
+            {% endif %}
+          </div>
+        {% endfor %}
       </div>
     </article>
 
     <article class="card">
-      <h3>Лента событий</h3>
+      <div class="row-between">
+        <h3>Лента событий</h3>
+        <a class="pet-link" href="{% url 'notifications_history' %}">История событий</a>
+      </div>
       {% if notifications %}
         <div class="match-list">
           {% for item in notifications %}
-          <div class="match-chip">
-            <span>{{ item.text }}</span>
-            <small class="form-meta">{{ item.created_at|date:'d.m H:i' }}</small>
-          </div>
+            {% if item.match_id %}
+            <a class="match-chip match-chip-link" href="{% url 'chats' %}?match={{ item.match_id }}">
+              <span>{{ item.text }}</span>
+              <small class="form-meta">{{ item.created_at|date:'d.m H:i' }}</small>
+            </a>
+            {% else %}
+            <div class="match-chip">
+              <span>{{ item.text }}</span>
+              <small class="form-meta">{{ item.created_at|date:'d.m H:i' }}</small>
+            </div>
+            {% endif %}
           {% endfor %}
         </div>
       {% else %}
         <p class="empty-state">Событий пока нет. Они появятся после мэтчей и сообщений.</p>
+      {% endif %}
+    </article>
+
+    <article class="card">
+      <div class="row-between">
+        <h3>Модерация и ограничения</h3>
+      </div>
+      <div class="quick-list">
+        <div>
+          Статус:
+          {% if moderation_status.is_under_moderation %}
+            под модерацией
+          {% else %}
+            ограничений нет
+          {% endif %}
+        </div>
+        <div>Подтвержденных жалоб: {{ moderation_status.valid_reports_count }}</div>
+        <div>
+          Скрытие из свайпов:
+          {% if active_hide %}
+            до {{ moderation_status.hidden_from_swipe_until|date:'d.m.Y H:i' }}
+          {% else %}
+            не активно
+          {% endif %}
+        </div>
+      </div>
+      <a class="pet-link" href="{% url 'my_restrictions' %}">Открыть детали ограничений</a>
+    </article>
+
+    <article class="card">
+      <h3>Мои жалобы</h3>
+      {% if recent_reports %}
+        <div class="match-list">
+          {% for report in recent_reports %}
+          <div class="match-chip">
+            <span>
+              {% if report.pet %}
+                Жалоба на {{ report.pet.name }}
+              {% elif report.message %}
+                Жалоба на сообщение
+              {% else %}
+                Жалоба отправлена
+              {% endif %}
+            </span>
+            <small class="form-meta">{{ report.created_at|date:'d.m H:i' }}</small>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty-state">Ты еще не отправлял(а) жалобы.</p>
+      {% endif %}
+    </article>
+
+    <article class="card">
+      <h3>Заблокированные пользователи</h3>
+      {% if recent_blocks %}
+        <div class="match-list">
+          {% for row in recent_blocks %}
+          <div class="match-chip">
+            <span>{{ row.blocked_user.username }}</span>
+            <small class="form-meta">{{ row.created_at|date:'d.m H:i' }}</small>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty-state">Список блокировок пуст.</p>
       {% endif %}
     </article>
   </aside>

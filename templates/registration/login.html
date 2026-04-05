@@ -7,11 +7,36 @@
   <p class="form-meta">Продолжим искать новых друзей для твоего питомца.</p>
   <form method="post" class="stack-form">
     {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
     {{ form.non_field_errors }}
-    <label>Логин {{ form.username }}</label>
-    <label>Пароль {{ form.password }}</label>
+    <label>
+      Логин
+      {{ form.username }}
+      {{ form.username.errors }}
+    </label>
+    <label>
+      Пароль
+      {{ form.password }}
+      {{ form.password.errors }}
+    </label>
+    <a class="pet-link" href="{% url 'password_reset' %}" style="margin-top:-2px;">Забыли пароль?</a>
+    <label class="login-remember">
+      {{ form.remember_me }}
+      <span>{{ form.remember_me.label }}</span>
+    </label>
     <button class="btn primary" type="submit">Войти</button>
   </form>
+
+  {% if show_resend %}
+    <article class="verify-resend-box">
+      <p>Мы отправили письмо подтверждения на <strong>{{ masked_resend_email }}</strong>.</p>
+      <form method="post" action="{% url 'resend_verification_email' %}" class="stack-form" style="margin-top:10px;">
+        {% csrf_token %}
+        <input type="hidden" name="email" value="{{ resend_email }}">
+        <button class="btn ghost" type="submit">Отправить письмо снова</button>
+      </form>
+    </article>
+  {% endif %}
 </section>
 {% endblock %}
 

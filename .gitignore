@@ -11,6 +11,9 @@ venv/
 # Django
 *.log
 db.sqlite3
+media/
+.env
+test_output.txt
 
 # OS / Editor
 .DS_Store

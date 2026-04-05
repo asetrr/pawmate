@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}PawMate | История событий{% endblock %}
+{% block content %}
+<section class="card">
+  <div class="row-between">
+    <h2>История событий</h2>
+    <a class="pet-link" href="{% url 'dashboard' %}">Назад в профиль</a>
+  </div>
+
+  {% if page_obj.object_list %}
+    <div class="match-list">
+      {% for item in page_obj %}
+        {% if item.match_id %}
+        <a class="match-chip match-chip-link" href="{% url 'chats' %}?match={{ item.match_id }}">
+          <span>{{ item.text }}</span>
+          <small class="form-meta">{{ item.created_at|date:'d.m.Y H:i' }}</small>
+        </a>
+        {% else %}
+        <div class="match-chip">
+          <span>{{ item.text }}</span>
+          <small class="form-meta">{{ item.created_at|date:'d.m.Y H:i' }}</small>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="row-between" style="margin-top: 12px;">
+      <div class="form-meta">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</div>
+      <div class="quick-replies">
+        {% if page_obj.has_previous %}
+          <a class="btn ghost" href="?page={{ page_obj.previous_page_number }}">Назад</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <a class="btn ghost" href="?page={{ page_obj.next_page_number }}">Дальше</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  {% else %}
+    <p class="empty-state">Событий пока нет.</p>
+  {% endif %}
+</section>
+{% endblock %}

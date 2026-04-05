@@ -5,7 +5,7 @@
   <section class="swipe-wrap">
     <article class="card swipe-card" id="swipe-card">
       {% if first_pet %}
-        <img class="swipe-photo" id="pet-photo" src="{{ first_pet.photo_url|default:'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=900&fit=crop' }}" alt="{{ first_pet.name }}">
+        <img class="swipe-photo" id="pet-photo" src="{{ first_pet.display_photo|default:'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=900&fit=crop' }}" alt="{{ first_pet.name }}">
         <h2 class="swipe-name" id="pet-name">{{ first_pet.name }}</h2>
         <p class="swipe-meta" id="pet-meta">{{ first_pet.species }}{% if first_pet.breed %} • {{ first_pet.breed }}{% endif %} • {{ first_pet.age }} г.</p>
         <p class="swipe-bio" id="pet-bio">{{ first_pet.bio }}</p>
@@ -21,6 +21,10 @@
     <div class="row-center">
       <button class="btn danger" id="nope-btn">Пропустить</button>
       <button class="btn success" id="like-btn">Лайк</button>
+    </div>
+    <div class="row-center">
+      <button class="btn ghost" id="report-btn">Пожаловаться</button>
+      <button class="btn ghost" id="block-btn">Блокировать хозяина</button>
     </div>
     <p id="swipe-status" class="swipe-status"></p>
   </section>
@@ -46,14 +50,16 @@
       <p class="form-meta" id="streak-text">Серия лайков: 0</p>
     </article>
 
-    <article class="card">
-      <h3>Горячие клавиши</h3>
-      <div class="kbd-list">
-        <div class="kbd-item"><span>Лайк</span><kbd>→</kbd></div>
-        <div class="kbd-item"><span>Пропустить</span><kbd>←</kbd></div>
-        <div class="kbd-item"><span>Чат с мэтчами</span><kbd>C</kbd></div>
-      </div>
-    </article>
+    {% if ui_settings.show_swipe_hotkeys %}
+      <article class="card">
+        <h3>Горячие клавиши</h3>
+        <div class="kbd-list">
+          <div class="kbd-item"><span>Лайк</span><kbd>→</kbd></div>
+          <div class="kbd-item"><span>Пропустить</span><kbd>←</kbd></div>
+          <div class="kbd-item"><span>Чат с мэтчами</span><kbd>C</kbd></div>
+        </div>
+      </article>
+    {% endif %}
 
     <article class="card">
       <h3>Подсказка</h3>
@@ -216,6 +222,39 @@ card.addEventListener('pointercancel', () => {
 
 document.getElementById('nope-btn').addEventListener('click', () => swipe(false));
 document.getElementById('like-btn').addEventListener('click', () => swipe(true));
+document.getElementById('report-btn').addEventListener('click', async () => {
+  const petId = petIdEl.dataset.id;
+  if (!petId) return;
+  const reason = prompt('Коротко опиши причину жалобы:');
+  if (!reason) return;
+  const body = new FormData();
+  body.append('reason', reason);
+  body.append('csrfmiddlewaretoken', csrfToken);
+  const res = await fetch(`/api/pets/${petId}/report/`, {
+    method: 'POST',
+    body,
+    headers: { 'X-CSRFToken': csrfToken }
+  });
+  statusEl.textContent = res.ok ? 'Жалоба отправлена модератору.' : 'Не удалось отправить жалобу.';
+});
+
+document.getElementById('block-btn').addEventListener('click', async () => {
+  const petId = petIdEl.dataset.id;
+  if (!petId) return;
+  const body = new FormData();
+  body.append('csrfmiddlewaretoken', csrfToken);
+  const res = await fetch(`/api/pets/${petId}/block/`, {
+    method: 'POST',
+    body,
+    headers: { 'X-CSRFToken': csrfToken }
+  });
+  if (res.ok) {
+    statusEl.textContent = 'Хозяин заблокирован. Подбираем другую карточку.';
+    await swipe(false);
+  } else {
+    statusEl.textContent = 'Не удалось выполнить блокировку.';
+  }
+});
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight') swipe(true);

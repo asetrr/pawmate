@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}PawMate | Мои ограничения{% endblock %}
+{% block content %}
+<section class="restriction-grid">
+  <article class="card">
+    <h2>Статус модерации</h2>
+    <div class="restriction-meta">
+      {% if status.is_under_moderation and active_hide %}
+        <span class="status-pill warn">Аккаунт временно скрыт из свайпов</span>
+      {% else %}
+        <span class="status-pill ok">Ограничений на показ сейчас нет</span>
+      {% endif %}
+      <p class="form-meta">
+        Скрытие до:
+        {% if status.hidden_from_swipe_until and active_hide %}
+          {{ status.hidden_from_swipe_until|date:'d.m.Y H:i' }}
+        {% else %}
+          не установлено
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="restriction-progress">
+      <div class="row-between">
+        <strong>Уровень риска</strong>
+        <span>{{ status.valid_reports_count }}/3</span>
+      </div>
+      <div class="progress"><span style="width: {{ progress_pct }}%;"></span></div>
+      <p class="form-meta">После 3 активных жалоб профиль скрывается из свайпов на 7 дней.</p>
+    </div>
+
+    <div class="quick-list">
+      <div><strong>Активных жалоб:</strong> {{ status.valid_reports_count }}</div>
+      <div><strong>Последняя причина:</strong> {{ status.last_reason|default:'не указана' }}</div>
+      <div><strong>Последнее обновление:</strong> {{ status.updated_at|date:'d.m.Y H:i' }}</div>
+    </div>
+  </article>
+
+  <article class="card">
+    <h2>Хронология жалоб на меня</h2>
+    {% if reports_about %}
+      <div class="timeline">
+        {% for report in reports_about %}
+          <div class="timeline-item">
+            <div>
+              <strong>{{ report.reason }}</strong>
+              <div class="form-meta">
+                От: @{{ report.reporter.username }}
+                {% if report.pet %} · Питомец: {{ report.pet.name }}{% endif %}
+                {% if report.message %} · Сообщение #{{ report.message.id }}{% endif %}
+                · {{ report.created_at|date:'d.m H:i' }}
+              </div>
+            </div>
+            <span class="badge">{{ report.get_status_display }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="empty-state">Активных жалоб на твой аккаунт нет.</p>
+    {% endif %}
+  </article>
+</section>
+
+<section class="restriction-grid" style="margin-top: 12px;">
+  <article class="card">
+    <h2>Подать апелляцию</h2>
+    <p class="form-meta">Если считаешь ограничение ошибочным, отправь апелляцию модератору.</p>
+    <form method="post" action="{% url 'submit_moderation_appeal' %}" class="stack-form">
+      {% csrf_token %}
+      <label>
+        Текст апелляции
+        {{ appeal_form.text }}
+        {{ appeal_form.text.errors }}
+      </label>
+      <button class="btn primary" type="submit">Отправить апелляцию</button>
+    </form>
+  </article>
+
+  <article class="card">
+    <h2>Мои апелляции</h2>
+    {% if appeals %}
+      <div class="timeline">
+        {% for appeal in appeals %}
+          <div class="timeline-item">
+            <div>
+              <strong>{{ appeal.text }}</strong>
+              <div class="form-meta">{{ appeal.created_at|date:'d.m H:i' }}</div>
+              {% if appeal.moderator_note %}
+                <div class="form-meta">Ответ модератора: {{ appeal.moderator_note }}</div>
+              {% endif %}
+            </div>
+            <span class="badge">{{ appeal.get_status_display }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="empty-state">Апелляций пока нет.</p>
+    {% endif %}
+  </article>
+</section>
+{% endblock %}

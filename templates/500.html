@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Ошибка сервера{% endblock %}
+
+{% block page_class %}error-page{% endblock %}
+
+{% block content %}
+  <div class="error-content">
+    <h1>500</h1>
+    <h2>Внутренняя ошибка сервера</h2>
+    <p>Извините, произошла ошибка на сервере. Мы уже работаем над её исправлением.</p>
+    <a href="{% url 'landing' %}" class="btn">Вернуться на главную</a>
+  </div>
+{% endblock %}

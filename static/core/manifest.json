@@ -1,0 +1,21 @@
+{
+  "name": "PawMate",
+  "short_name": "PawMate",
+  "description": "Знакомства для питомцев",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070b16",
+  "theme_color": "#46d5ff",
+  "icons": [
+    {
+      "src": "/static/core/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/core/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

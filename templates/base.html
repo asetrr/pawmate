@@ -4,13 +4,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{% block meta_description %}PawMate - приложение для знакомств питомцев. Найди друзей для своего питомца среди тысяч пользователей.{% endblock %}">
+  <meta name="keywords" content="знакомства питомцев, собаки, кошки, мэтчи, чат, PawMate">
+  <meta name="author" content="PawMate">
+  <meta property="og:title" content="{% block og_title %}PawMate - Знакомства для питомцев{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Найди идеального друга для своего питомца{% endblock %}">
+  <meta property="og:image" content="{% static 'core/logo.png' %}">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#000000">
+  <link rel="canonical" href="{{ request.build_absolute_uri }}">
+  <link rel="manifest" href="{% static 'core/manifest.json' %}">
   <title>{% block title %}PawMate{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'core/styles.css' %}">
 </head>
-<body>
+<body class="theme-{{ site_theme|default:'dark' }}">
   <div class="aurora aurora-a"></div>
   <div class="aurora aurora-b"></div>
 
@@ -22,13 +34,14 @@
 
     <nav class="nav">
       <a href="{% url 'landing' %}">Главная</a>
-      <a href="{% url 'how_it_works' %}">Как это работает</a>
-      <a href="{% url 'safety' %}">Безопасность</a>
-      <a href="{% url 'faq' %}">FAQ</a>
       {% if user.is_authenticated %}
         <a href="{% url 'swipe' %}">Свайп</a>
         <a href="{% url 'dashboard' %}">Профиль</a>
         <a href="{% url 'chats' %}">Чаты</a>
+        <a href="{% url 'profile_settings' %}">Настройки</a>
+        {% if user.is_staff %}
+          <a href="{% url 'moderation_queue' %}">Мод-панель</a>
+        {% endif %}
         <form method="post" action="{% url 'logout' %}">
           {% csrf_token %}
           <button class="link-btn" type="submit">Выйти</button>
@@ -40,7 +53,7 @@
     </nav>
   </header>
 
-  <main class="page shell">
+  <main class="page shell {% block page_class %}{% endblock %}">
     {% if messages %}
       <div class="alerts">
         {% for message in messages %}
@@ -50,5 +63,20 @@
     {% endif %}
     {% block content %}{% endblock %}
   </main>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('{% static "core/sw.js" %}')
+        .then(registration => console.log('SW registered'))
+        .catch(error => console.log('SW registration failed'));
+    }
+  </script>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'GA_MEASUREMENT_ID');
+  </script>
 </body>
 </html>

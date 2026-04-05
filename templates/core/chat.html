@@ -23,7 +23,12 @@
       <h2>Чат с {{ active_match.pet.name }}</h2>
       <div class="messages" id="messages-box">
         {% for message in active_messages %}
-          <div class="msg {% if message.sender_id == user.id %}me{% endif %}">{{ message.text }}</div>
+          <div class="msg-row {% if message.sender_id == user.id %}me{% endif %}" data-message-id="{{ message.id }}">
+            <div class="msg {% if message.sender_id == user.id %}me{% endif %}">{{ message.text }}</div>
+            {% if message.sender_id != user.id %}
+              <button class="tiny-btn" type="button" data-report-message="{{ message.id }}">Жалоба</button>
+            {% endif %}
+          </div>
         {% endfor %}
       </div>
 
@@ -65,6 +70,25 @@
           Вторая сторона: {% if meeting_plan.confirmed_by_owner %}да{% else %}нет{% endif %}
         </p>
       </article>
+
+      <div class="report-modal is-hidden" id="report-modal" aria-hidden="true">
+        <div class="report-modal__backdrop" data-close-report-modal></div>
+        <div class="report-modal__dialog card" role="dialog" aria-modal="true" aria-labelledby="report-modal-title">
+          <h3 id="report-modal-title">Пожаловаться на сообщение</h3>
+          <p class="form-meta">Опиши причину жалобы. Модератор увидит это описание.</p>
+          <form id="report-form" class="stack-form">
+            {% csrf_token %}
+            <label>
+              Причина жалобы
+              <textarea class="report-textarea" id="report-reason" maxlength="240" rows="4" placeholder="Например: оскорбления, спам, неприемлемый контент" required></textarea>
+            </label>
+            <div class="report-modal__actions">
+              <button class="btn ghost" type="button" id="report-cancel-btn">Отмена</button>
+              <button class="btn primary" type="submit" id="report-submit-btn">Отправить жалобу</button>
+            </div>
+          </form>
+        </div>
+      </div>
     {% else %}
       <h2>Выбери мэтч слева</h2>
       <p class="empty-state">После выбора откроется переписка и отправка сообщений.</p>
@@ -83,13 +107,104 @@ const meetingStatusLine = document.getElementById('meeting-status-line');
 const meetingConfirmLine = document.getElementById('meeting-confirm-line');
 const confirmMyBtn = document.getElementById('confirm-my-btn');
 const confirmBothBtn = document.getElementById('confirm-both-btn');
+const sendBtn = form.querySelector('button[type="submit"]');
+const reportModal = document.getElementById('report-modal');
+const reportForm = document.getElementById('report-form');
+const reportReason = document.getElementById('report-reason');
+const reportSubmitBtn = document.getElementById('report-submit-btn');
+const reportCancelBtn = document.getElementById('report-cancel-btn');
+let currentReportMessageId = null;
+let currentReportBtn = null;
+let lastMessageId = 0;
+let pollTimer = null;
 
-function appendMessage(text, mine) {
+function appendMessage(text, mine, messageId = null) {
+  if (messageId && box.querySelector(`[data-message-id="${messageId}"]`)) {
+    return;
+  }
+  const row = document.createElement('div');
+  row.className = `msg-row ${mine ? 'me' : ''}`.trim();
+  if (messageId) {
+    row.dataset.messageId = String(messageId);
+    lastMessageId = Math.max(lastMessageId, Number(messageId) || 0);
+  }
+
   const el = document.createElement('div');
   el.className = `msg ${mine ? 'me' : ''}`.trim();
   el.textContent = text;
-  box.appendChild(el);
+  row.appendChild(el);
+
+  if (!mine && messageId) {
+    const reportBtn = document.createElement('button');
+    reportBtn.type = 'button';
+    reportBtn.className = 'tiny-btn';
+    reportBtn.dataset.reportMessage = String(messageId);
+    reportBtn.textContent = 'Жалоба';
+    row.appendChild(reportBtn);
+  }
+
+  box.appendChild(row);
   box.scrollTop = box.scrollHeight;
+}
+
+function initializeLastMessageId() {
+  const rows = box.querySelectorAll('[data-message-id]');
+  if (!rows.length) {
+    lastMessageId = 0;
+    return;
+  }
+  lastMessageId = Math.max(
+    ...Array.from(rows).map((row) => Number(row.dataset.messageId) || 0)
+  );
+}
+
+function runCooldown(button, seconds, defaultLabel) {
+  let left = Number(seconds) || 0;
+  if (left <= 0) return;
+  button.disabled = true;
+  button.textContent = `Подожди ${left}s`;
+  const t = setInterval(() => {
+    left -= 1;
+    if (left <= 0) {
+      clearInterval(t);
+      button.disabled = false;
+      button.textContent = defaultLabel;
+      return;
+    }
+    button.textContent = `Подожди ${left}s`;
+  }, 1000);
+}
+
+function bindMessageReportButtons() {
+  document.querySelectorAll('[data-report-message]').forEach((btn) => {
+    if (btn.dataset.bound === '1') return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', () => {
+      currentReportMessageId = btn.dataset.reportMessage;
+      currentReportBtn = btn;
+      openReportModal();
+    });
+  });
+}
+
+function openReportModal() {
+  if (!reportModal) return;
+  reportModal.classList.remove('is-hidden');
+  reportModal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('modal-open');
+  document.body.style.overflow = 'hidden';
+  reportReason.value = '';
+  setTimeout(() => reportReason.focus(), 10);
+}
+
+function closeReportModal() {
+  if (!reportModal) return;
+  reportModal.classList.add('is-hidden');
+  reportModal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('modal-open');
+  document.body.style.overflow = '';
+  currentReportMessageId = null;
+  currentReportBtn = null;
 }
 
 async function sendCurrentText() {
@@ -103,18 +218,35 @@ async function sendCurrentText() {
     headers: { 'X-CSRFToken': data.get('csrfmiddlewaretoken') }
   });
 
+  if (res.status === 429) {
+    const payload = await res.json();
+    runCooldown(sendBtn, payload.retry_after || 10, 'Отправить');
+    return;
+  }
   if (!res.ok) return;
 
   const payload = await res.json();
   if (payload.message) {
-    appendMessage(payload.message.text, true);
+    appendMessage(payload.message.text, true, payload.message.id);
   }
   if (payload.auto_reply) {
-    setTimeout(() => appendMessage(payload.auto_reply.text, false), 420);
+    setTimeout(() => {
+      appendMessage(payload.auto_reply.text, false, payload.auto_reply.id);
+      bindMessageReportButtons();
+    }, 420);
   }
 
   input.value = '';
   input.focus();
+}
+
+async function pollMessages() {
+  const res = await fetch(`{% url "fetch_messages_api" active_match.id %}?last_id=${lastMessageId}`);
+  if (!res.ok) return;
+  const payload = await res.json();
+  if (!payload.messages || !payload.messages.length) return;
+  payload.messages.forEach((msg) => appendMessage(msg.text, msg.mine, msg.id));
+  bindMessageReportButtons();
 }
 
 form.addEventListener('submit', async (e) => {
@@ -162,6 +294,51 @@ confirmMyBtn.addEventListener('click', () => confirmMeeting(false));
 
 confirmBothBtn.addEventListener('click', async () => {
   await confirmMeeting(true);
+});
+
+reportCancelBtn.addEventListener('click', closeReportModal);
+reportModal.querySelector('[data-close-report-modal]').addEventListener('click', closeReportModal);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !reportModal.classList.contains('is-hidden')) {
+    closeReportModal();
+  }
+});
+
+reportForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const reason = (reportReason.value || '').trim();
+  if (!reason || !currentReportMessageId || !currentReportBtn) return;
+
+  const data = new FormData();
+  data.append('reason', reason);
+  data.append('csrfmiddlewaretoken', document.querySelector('#send-form input[name=\"csrfmiddlewaretoken\"]').value);
+
+  reportSubmitBtn.disabled = true;
+  const res = await fetch(`/api/messages/${currentReportMessageId}/report/`, {
+    method: 'POST',
+    body: data,
+    headers: { 'X-CSRFToken': data.get('csrfmiddlewaretoken') }
+  });
+  reportSubmitBtn.disabled = false;
+
+  if (res.status === 429) {
+    const payload = await res.json();
+    runCooldown(currentReportBtn, payload.retry_after || 10, 'Жалоба');
+    closeReportModal();
+    return;
+  }
+
+  if (!res.ok) return;
+  currentReportBtn.textContent = 'Отправлено';
+  currentReportBtn.disabled = true;
+  closeReportModal();
+});
+
+bindMessageReportButtons();
+initializeLastMessageId();
+pollTimer = setInterval(pollMessages, 3500);
+window.addEventListener('beforeunload', () => {
+  if (pollTimer) clearInterval(pollTimer);
 });
 </script>
 {% endif %}

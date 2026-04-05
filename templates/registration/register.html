@@ -4,14 +4,42 @@
 <section class="card auth-card">
   <div class="badge">🚀 Новый профиль</div>
   <h1>Создать аккаунт</h1>
-  <p class="form-meta">После регистрации добавь питомца и начни свайпать в пару кликов.</p>
+  <p class="form-meta">После регистрации отправим письмо с подтверждением email.</p>
   <form method="post" class="stack-form">
     {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
     {{ form.non_field_errors }}
-    <label>Логин {{ form.username }}</label>
-    <label>Email {{ form.email }}</label>
-    <label>Пароль {{ form.password1 }}</label>
-    <label>Повтор пароля {{ form.password2 }}</label>
+    <label>
+      Логин
+      {{ form.username }}
+      {{ form.username.errors }}
+    </label>
+    <label>
+      Email
+      {{ form.email }}
+      {{ form.email.errors }}
+    </label>
+    <label>
+      Пароль
+      {{ form.password1 }}
+      {{ form.password1.errors }}
+    </label>
+    <label>
+      Повтор пароля
+      {{ form.password2 }}
+      {{ form.password2.errors }}
+    </label>
+    <label class="settings-check">
+      {{ form.accept_terms }}
+      <span>
+        Я принимаю
+        <a class="pet-link" href="{% url 'terms' %}" target="_blank" rel="noopener">условия</a>
+        и
+        <a class="pet-link" href="{% url 'privacy' %}" target="_blank" rel="noopener">политику</a>.
+      </span>
+    </label>
+    {{ form.accept_terms.errors }}
+    <p class="form-meta">Используй минимум 8 символов и не ставь простой пароль.</p>
     <button class="btn primary" type="submit">Создать аккаунт</button>
   </form>
 </section>

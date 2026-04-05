@@ -1,0 +1,73 @@
+﻿{% extends 'base.html' %}
+{% block title %}PawMate | Настройки{% endblock %}
+{% block content %}
+<section class="card auth-card">
+  <div class="badge">⚙️ Персональные настройки</div>
+  <h1>Настройки профиля</h1>
+  <p class="form-meta">Здесь можно управлять безопасностью и внешним видом приложения.</p>
+
+  <form method="post" class="stack-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div>
+      <label>Тема интерфейса</label>
+      <div class="theme-picker" role="radiogroup" aria-label="Тема интерфейса">
+        {% with current_theme=form.theme.value|default:'dark' %}
+          <label class="theme-option">
+            <input type="radio" name="theme" value="dark" class="theme-radio" {% if current_theme == 'dark' %}checked{% endif %}>
+            <span class="theme-card">
+              <strong>Темная</strong>
+              <small>Текущий стиль PawMate</small>
+            </span>
+          </label>
+          <label class="theme-option">
+            <input type="radio" name="theme" value="light" class="theme-radio" {% if current_theme == 'light' %}checked{% endif %}>
+            <span class="theme-card">
+              <strong>Светлая</strong>
+              <small>Дневной режим с мягким контрастом</small>
+            </span>
+          </label>
+        {% endwith %}
+      </div>
+      {{ form.theme.errors }}
+    </div>
+
+    <label class="settings-check">
+      {{ form.two_factor_enabled }}
+      <span>Включить двухфакторный вход (код на email)</span>
+    </label>
+
+    <label class="settings-check">
+      {{ form.show_demo_profiles }}
+      <span>Показывать demo-профили в свайпах</span>
+    </label>
+
+    <label class="settings-check">
+      {{ form.show_swipe_hotkeys }}
+      <span>Показывать блок горячих клавиш в свайпах</span>
+    </label>
+
+    <button class="btn primary" type="submit">Сохранить настройки</button>
+  </form>
+
+  <hr class="settings-divider">
+
+  <section class="settings-danger">
+    <h3>Удаление аккаунта</h3>
+    <p class="form-meta">Это действие удалит профиль, питомцев, чаты и связанные данные без возможности восстановления.</p>
+    <form method="post" action="{% url 'delete_account' %}" class="stack-form">
+      {% csrf_token %}
+      <label>
+        Текущий пароль
+        {{ delete_form.password }}
+      </label>
+      <label class="settings-check">
+        {{ delete_form.confirm }}
+        <span>Я понимаю, что удаление необратимо</span>
+      </label>
+      <button class="btn danger" type="submit">Удалить аккаунт</button>
+    </form>
+  </section>
+</section>
+{% endblock %}
