@@ -1,0 +1,475 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetSwipe - Личный кабинет</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 70%, #0f0f23 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            right: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            background: rgba(255,255,255,0.05);
+            padding: 16px 24px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo-small {
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00f5ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+        }
+
+        .nav-btn-primary {
+            background: linear-gradient(135deg, #00f5ff, #ff00ff);
+            color: #0f0f23;
+            box-shadow: 0 8px 32px rgba(0,245,255,0.4);
+        }
+
+        .nav-btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 48px rgba(0,245,255,0.6);
+        }
+
+        .nav-btn-secondary {
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+        }
+
+        .nav-btn-secondary:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(0,245,255,0.5);
+        }
+
+        .main-container {
+            padding: 140px 24px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .user-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .avatar-section {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 24px;
+        }
+
+        .avatar {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 5px solid rgba(0,245,255,0.4);
+            object-fit: cover;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .avatar:hover {
+            transform: scale(1.05);
+            border-color: #00f5ff;
+        }
+
+        .avatar-edit {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: linear-gradient(135deg, #00f5ff, #ff00ff);
+            color: #0f0f23;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0,245,255,0.4);
+            transition: all 0.3s ease;
+        }
+
+        .avatar-edit:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 32px rgba(0,245,255,0.6);
+        }
+
+        .user-name {
+            font-size: 36px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00f5ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .user-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 800;
+            color: #00f5ff;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 14px 28px;
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 24px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #00f5ff, #ff00ff);
+            color: #0f0f23;
+            border-color: transparent;
+            box-shadow: 0 12px 40px rgba(0,245,255,0.4);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .pet-card {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .pet-card:hover {
+            transform: translateY(-8px);
+            background: rgba(255,255,255,0.12);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+
+        .pet-photo {
+            width: 100%;
+            height: 160px;
+            border-radius: 20px;
+            object-fit: cover;
+            margin-bottom: 16px;
+        }
+
+        .pet-name {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .pet-type {
+            font-size: 16px;
+            opacity: 0.8;
+            margin-bottom: 12px;
+        }
+
+        .pet-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pet-action {
+            flex: 1;
+            padding: 10px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .edit-pet {
+            background: rgba(0,245,255,0.2);
+            color: #00f5ff;
+            border: 2px solid rgba(0,245,255,0.4);
+        }
+
+        .delete-pet {
+            background: rgba(255,0,255,0.2);
+            color: #ff00ff;
+            border: 2px solid rgba(255,0,255,0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            opacity: 0.6;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+        }
+
+        .profile-form {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 28px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 18px 24px;
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            color: white;
+            font-size: 16px;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            border-color: #00f5ff;
+            box-shadow: 0 0 0 4px rgba(0,245,255,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 120px 16px 20px;
+            }
+
+            .user-stats {
+                gap: 24px;
+            }
+
+            .stat-number {
+                font-size: 24px;
+            }
+
+            .pets-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-small">PetSwipe</div>
+        <div class="nav-buttons">
+            <a href="profile-pet.html" class="nav-btn nav-btn-secondary">Питомцы</a>
+            <a href="swipe.html" class="nav-btn nav-btn-primary">Свайп</a>
+            <a href="chats.html" class="nav-btn nav-btn-secondary">Чаты</a>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="user-header">
+            <div class="avatar-section">
+                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face" 
+                     alt="Аватар" class="avatar">
+                <button class="avatar-edit">✏️</button>
+            </div>
+            <div class="user-name">Антон Петров</div>
+            <div class="user-stats">
+                <div class="stat">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Питомцев</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">47</div>
+                    <div class="stat-label">Мэтчей</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Чатов</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('pets')">Мои питомцы</button>
+            <button class="tab-btn" onclick="showTab('profile')">Профиль</button>
+            <button class="tab-btn" onclick="showTab('settings')">Настройки</button>
+        </div>
+
+        <div id="pets" class="tab-content active">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+            <h2 style="font-size: 28px; font-weight: 800;">Мои питомцы</h2>
+            <a href="pet_profile_v3.html" class="nav-btn-primary" style="padding: 14px 28px; font-size: 15px;">
+                ➕ Создать питомца
+            </a>
+        </div>
+            <div class="pets-grid">
+                <div class="pet-card">
+                    <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=300&h=200&fit=crop" 
+                         alt="Максик" class="pet-photo">
+                    <div class="pet-name">Максик</div>
+                    <div class="pet-type">Лабрадор • 3 года • ♂</div>
+                    <div class="pet-actions">
+                        <button class="pet-action edit-pet">Редактировать</button>
+                        <button class="pet-action delete-pet">Удалить</button>
+                    </div>
+                </div>
+                <div class="pet-card">
+                    <img src="https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=300&h=200&fit=crop" 
+                         alt="Мурка" class="pet-photo">
+                    <div class="pet-name">Мурка</div>
+                    <div class="pet-type">Британская • 2 года • ♀</div>
+                    <div class="pet-actions">
+                        <button class="pet-action edit-pet">Редактировать</button>
+                        <button class="pet-action delete-pet">Удалить</button>
+                    </div>
+                </div>
+                <div class="pet-card">
+                    <img src="https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=300&h=200&fit=crop" 
+                         alt="Хомяк" class="pet-photo">
+                    <div class="pet-name">Пушистик</div>
+                    <div class="pet-type">Хомяк • 1 год • ♂</div>
+                    <div class="pet-actions">
+                        <button class="pet-action edit-pet">Редактировать</button>
+                        <button class="pet-action delete-pet">Удалить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="profile" class="tab-content">
+            <form class="profile-form">
+                <div class="form-group">
+                    <input type="text" class="form-input" value="Антон Петров" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" class="form-input" value="anton@example.com" required>
+                </div>
+                <div class="form-group">
+                    <input type="tel" class="form-input" value="+375 (29) 123-45-67">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-input" value="Минск">
+                </div>
+                <button type="submit" class="nav-btn-primary" style="width: 100%; margin-top: 20px;">Сохранить</button>
+            </form>
+        </div>
+
+        <div id="settings" class="tab-content">
+            <div class="form-group">
+                <label>Уведомления</label>
+                <div style="margin-top: 12px;">
+                    <label style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                        <input type="checkbox" checked> Матчи
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 12px;">
+                        <input type="checkbox"> Сообщения
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Приватность</label>
+                <select class="form-input" style="margin-top: 12px;">
+                    <option>Публичный профиль</option>
+                    <option>Только для друзей</option>
+                    <option>Приватный</option>
+                </select>
+            </div>
+            <button class="nav-btn-primary" style="width: 100%; margin-top: 20px;">Сохранить настройки</button>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Скрыть все табы
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Показать выбранный
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

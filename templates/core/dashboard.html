@@ -1,0 +1,88 @@
+﻿{% extends 'base.html' %}
+{% block title %}PawMate | Мой кабинет{% endblock %}
+{% block content %}
+<section class="stats-grid">
+  <article class="card stat-card">
+    <h3>Питомцев в профиле</h3>
+    <div class="stat-value orange">{{ stats.pets }}</div>
+  </article>
+  <article class="card stat-card">
+    <h3>Всего мэтчей</h3>
+    <div class="stat-value green">{{ stats.matches }}</div>
+  </article>
+  <article class="card stat-card">
+    <h3>Сообщений</h3>
+    <div class="stat-value blue">{{ stats.messages }}</div>
+  </article>
+</section>
+
+<section class="dashboard-layout">
+  <article class="card">
+    <div class="row-between">
+      <h2>Мои питомцы</h2>
+      <a class="btn primary" href="{% url 'pet_create' %}">+ Добавить питомца</a>
+    </div>
+
+    {% if pets %}
+      <div class="pets-panel">
+        {% for pet in pets %}
+        <article class="pet-item">
+          <img src="{{ pet.photo_url|default:'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=800&fit=crop' }}" alt="{{ pet.name }}">
+          <div>
+            <h3>{{ pet.name }}</h3>
+            <p class="pet-meta">{{ pet.species }}{% if pet.breed %} • {{ pet.breed }}{% endif %} • {{ pet.age }} г.</p>
+            <a class="pet-link" href="{% url 'pet_edit' pet.id %}">Редактировать карточку</a>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="empty-state">Пока нет питомцев. Добавь первого и переходи к свайпам.</p>
+    {% endif %}
+  </article>
+
+  <aside class="side-stack">
+    <article class="card">
+      <h3>Последние мэтчи</h3>
+      {% if recent_matches %}
+        <div class="match-list">
+          {% for match in recent_matches %}
+          <div class="match-chip">
+            <span>{{ match.pet.name }}</span>
+            <a class="pet-link" href="{% url 'chats' %}?match={{ match.id }}">Чат</a>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty-state">Пока пусто. Загляни в свайпы и поставь пару лайков.</p>
+      {% endif %}
+    </article>
+
+    <article class="card">
+      <h3>Что делать дальше</h3>
+      <div class="quick-list">
+        <div>1. Заполни описание питомца подробно.</div>
+        <div>2. Свайпай минимум 10 карточек в день.</div>
+        <div>3. После мэтча сразу пиши первое сообщение.</div>
+      </div>
+    </article>
+
+    <article class="card">
+      <h3>Лента событий</h3>
+      {% if notifications %}
+        <div class="match-list">
+          {% for item in notifications %}
+          <div class="match-chip">
+            <span>{{ item.text }}</span>
+            <small class="form-meta">{{ item.created_at|date:'d.m H:i' }}</small>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty-state">Событий пока нет. Они появятся после мэтчей и сообщений.</p>
+      {% endif %}
+    </article>
+  </aside>
+</section>
+{% endblock %}
+

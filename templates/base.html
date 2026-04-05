@@ -1,0 +1,54 @@
+﻿{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}PawMate{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+</head>
+<body>
+  <div class="aurora aurora-a"></div>
+  <div class="aurora aurora-b"></div>
+
+  <header class="topbar shell">
+    <a class="brand" href="{% url 'landing' %}">
+      <span class="brand-mark">🐾</span>
+      <span class="brand-text">PawMate</span>
+    </a>
+
+    <nav class="nav">
+      <a href="{% url 'landing' %}">Главная</a>
+      <a href="{% url 'how_it_works' %}">Как это работает</a>
+      <a href="{% url 'safety' %}">Безопасность</a>
+      <a href="{% url 'faq' %}">FAQ</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'swipe' %}">Свайп</a>
+        <a href="{% url 'dashboard' %}">Профиль</a>
+        <a href="{% url 'chats' %}">Чаты</a>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button class="link-btn" type="submit">Выйти</button>
+        </form>
+      {% else %}
+        <a href="{% url 'login' %}">Войти</a>
+        <a class="pill" href="{% url 'register' %}">Регистрация</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main class="page shell">
+    {% if messages %}
+      <div class="alerts">
+        {% for message in messages %}
+          <div class="alert">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

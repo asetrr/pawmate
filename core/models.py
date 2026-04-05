@@ -1,0 +1,99 @@
+﻿from django.conf import settings
+from django.db import models
+
+
+class Pet(models.Model):
+    class Gender(models.TextChoices):
+        MALE = 'male', 'Самец'
+        FEMALE = 'female', 'Самка'
+
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='pets')
+    name = models.CharField(max_length=64)
+    species = models.CharField(max_length=64)
+    breed = models.CharField(max_length=64, blank=True)
+    age = models.PositiveSmallIntegerField()
+    gender = models.CharField(max_length=10, choices=Gender.choices)
+    city = models.CharField(max_length=64, blank=True)
+    bio = models.TextField(max_length=500)
+    photo_url = models.URLField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.name} ({self.owner.username})'
+
+
+class Swipe(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='swipes')
+    pet = models.ForeignKey(Pet, on_delete=models.CASCADE, related_name='swipes')
+    liked = models.BooleanField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'pet')
+
+
+class Match(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='matches')
+    pet = models.ForeignKey(Pet, on_delete=models.CASCADE, related_name='matches')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'pet')
+        ordering = ['-created_at']
+
+
+class Message(models.Model):
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_messages')
+    text = models.CharField(max_length=400)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+
+class UserSwipePreference(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='swipe_pref')
+    species = models.CharField(max_length=64, blank=True)
+    city = models.CharField(max_length=64, blank=True)
+    min_age = models.PositiveSmallIntegerField(default=0)
+    max_age = models.PositiveSmallIntegerField(default=30)
+    active_today = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class MeetingPlan(models.Model):
+    class Status(models.TextChoices):
+        DRAFT = 'draft', 'Черновик'
+        PROPOSED = 'proposed', 'Предложено'
+        CONFIRMED = 'confirmed', 'Подтверждено'
+        DONE = 'done', 'Завершено'
+
+    match = models.OneToOneField(Match, on_delete=models.CASCADE, related_name='meeting_plan')
+    place = models.CharField(max_length=120, blank=True)
+    starts_at = models.DateTimeField(null=True, blank=True)
+    note = models.CharField(max_length=220, blank=True)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.DRAFT)
+    confirmed_by_user = models.BooleanField(default=False)
+    confirmed_by_owner = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class Notification(models.Model):
+    class Type(models.TextChoices):
+        MATCH = 'match', 'Новый мэтч'
+        MESSAGE = 'message', 'Новое сообщение'
+        MEETING = 'meeting', 'План встречи'
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='notifications', null=True, blank=True)
+    kind = models.CharField(max_length=16, choices=Type.choices)
+    text = models.CharField(max_length=220)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']

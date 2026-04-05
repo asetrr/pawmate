@@ -1,0 +1,169 @@
+﻿{% extends 'base.html' %}
+{% block title %}PawMate | Чаты{% endblock %}
+{% block content %}
+<section class="chat-layout">
+  <aside class="card chat-list">
+    <h2>Мэтчи</h2>
+    {% if matches %}
+      {% for row in match_rows %}
+      <a class="chat-link {% if active_match and active_match.id == row.match.id %}active{% endif %}" href="{% url 'chats' %}?match={{ row.match.id }}">
+        <span>{{ row.match.pet.name }}</span>
+        {% if row.unread %}
+          <strong>+{{ row.unread }}</strong>
+        {% endif %}
+      </a>
+      {% endfor %}
+    {% else %}
+      <p class="empty-state">Пока нет мэтчей. Сделай несколько свайпов с лайком.</p>
+    {% endif %}
+  </aside>
+
+  <section class="card chat-main">
+    {% if active_match %}
+      <h2>Чат с {{ active_match.pet.name }}</h2>
+      <div class="messages" id="messages-box">
+        {% for message in active_messages %}
+          <div class="msg {% if message.sender_id == user.id %}me{% endif %}">{{ message.text }}</div>
+        {% endfor %}
+      </div>
+
+      <form id="send-form" class="row" method="post" action="{% url 'send_message_api' active_match.id %}">
+        {% csrf_token %}
+        <input type="text" name="text" id="msg-input" maxlength="400" placeholder="Написать сообщение" required>
+        <button class="btn primary" type="submit">Отправить</button>
+      </form>
+
+      <div class="quick-replies" data-kind="chat">
+        <button type="button" data-text="Привет! Когда удобно встретиться?">Привет и знакомство</button>
+        <button type="button" data-text="Давай погуляем в субботу в парке?">Прогулка в субботу</button>
+        <button type="button" data-text="Как твой питомец относится к новым друзьям?">Вопрос о характере</button>
+      </div>
+
+      <article class="card" style="margin-top: 12px;">
+        <h3>План встречи</h3>
+        <form id="meeting-form" class="stack-form" method="post" action="{% url 'update_meeting_api' active_match.id %}">
+          {% csrf_token %}
+          <label>Место {{ meeting_form.place }}</label>
+          <label>Дата и время {{ meeting_form.starts_at }}</label>
+          <label>Статус {{ meeting_form.status }}</label>
+          <label>Комментарий {{ meeting_form.note }}</label>
+          <button class="btn ghost" type="submit">Сохранить план</button>
+        </form>
+        <p class="form-meta" id="meeting-status-line">
+          {% if meeting_plan.starts_at %}
+            {{ meeting_plan.get_status_display }} · {{ meeting_plan.starts_at|date:'d.m H:i' }} · {{ meeting_plan.place }}
+          {% else %}
+            План еще не назначен
+          {% endif %}
+        </p>
+        <div class="quick-replies" data-kind="meeting">
+          <button type="button" id="confirm-my-btn">Подтвердить с моей стороны</button>
+          <button type="button" id="confirm-both-btn">Подтвердить обе стороны (demo)</button>
+        </div>
+        <p class="form-meta" id="meeting-confirm-line">
+          Хозяин: {% if meeting_plan.confirmed_by_user %}да{% else %}нет{% endif %} ·
+          Вторая сторона: {% if meeting_plan.confirmed_by_owner %}да{% else %}нет{% endif %}
+        </p>
+      </article>
+    {% else %}
+      <h2>Выбери мэтч слева</h2>
+      <p class="empty-state">После выбора откроется переписка и отправка сообщений.</p>
+    {% endif %}
+  </section>
+</section>
+
+{% if active_match %}
+<script>
+const form = document.getElementById('send-form');
+const input = document.getElementById('msg-input');
+const box = document.getElementById('messages-box');
+const quick = document.querySelectorAll('.quick-replies[data-kind=\"chat\"] button');
+const meetingForm = document.getElementById('meeting-form');
+const meetingStatusLine = document.getElementById('meeting-status-line');
+const meetingConfirmLine = document.getElementById('meeting-confirm-line');
+const confirmMyBtn = document.getElementById('confirm-my-btn');
+const confirmBothBtn = document.getElementById('confirm-both-btn');
+
+function appendMessage(text, mine) {
+  const el = document.createElement('div');
+  el.className = `msg ${mine ? 'me' : ''}`.trim();
+  el.textContent = text;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+async function sendCurrentText() {
+  const text = input.value.trim();
+  if (!text) return;
+
+  const data = new FormData(form);
+  const res = await fetch(form.action, {
+    method: 'POST',
+    body: data,
+    headers: { 'X-CSRFToken': data.get('csrfmiddlewaretoken') }
+  });
+
+  if (!res.ok) return;
+
+  const payload = await res.json();
+  if (payload.message) {
+    appendMessage(payload.message.text, true);
+  }
+  if (payload.auto_reply) {
+    setTimeout(() => appendMessage(payload.auto_reply.text, false), 420);
+  }
+
+  input.value = '';
+  input.focus();
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  await sendCurrentText();
+});
+
+quick.forEach((btn) => {
+  btn.addEventListener('click', async () => {
+    input.value = btn.dataset.text || '';
+    await sendCurrentText();
+  });
+});
+
+meetingForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = new FormData(meetingForm);
+  const res = await fetch(meetingForm.action, {
+    method: 'POST',
+    body: data,
+    headers: { 'X-CSRFToken': data.get('csrfmiddlewaretoken') }
+  });
+  if (!res.ok) return;
+  const payload = await res.json();
+  meetingStatusLine.textContent = `${payload.status}${payload.starts_at ? ' · ' + payload.starts_at : ''}${payload.place ? ' · ' + payload.place : ''}`;
+  meetingConfirmLine.textContent = `Хозяин: ${payload.confirmed_by_user ? 'да' : 'нет'} · Вторая сторона: ${payload.confirmed_by_owner ? 'да' : 'нет'}`;
+});
+
+async function confirmMeeting(forceOwner) {
+  const data = new FormData();
+  data.append('csrfmiddlewaretoken', document.querySelector('#meeting-form input[name=\"csrfmiddlewaretoken\"]').value);
+  if (forceOwner) data.append('force_owner', '1');
+  const res = await fetch('{% url "confirm_meeting_api" active_match.id %}', {
+    method: 'POST',
+    body: data,
+    headers: { 'X-CSRFToken': data.get('csrfmiddlewaretoken') }
+  });
+  if (!res.ok) return;
+  const payload = await res.json();
+  meetingStatusLine.textContent = payload.status;
+  meetingConfirmLine.textContent = `Хозяин: ${payload.confirmed_by_user ? 'да' : 'нет'} · Вторая сторона: ${payload.confirmed_by_owner ? 'да' : 'нет'}`;
+}
+
+confirmMyBtn.addEventListener('click', () => confirmMeeting(false));
+
+confirmBothBtn.addEventListener('click', async () => {
+  await confirmMeeting(true);
+});
+</script>
+{% endif %}
+{% endblock %}
+

@@ -1,0 +1,239 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetSwipe - Регистрация</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 70%, #0f0f23 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 60px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .register-container {
+            width: 100%;
+            max-width: 420px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(40px);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 40px 36px;
+            box-shadow: 0 30px 100px rgba(0, 245, 255, 0.25);
+        }
+
+        .logo {
+            font-size: 40px;
+            font-weight: 900;
+            text-align: center;
+            background: linear-gradient(135deg, #00f5ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+        }
+
+        .title {
+            font-size: 26px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 32px;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .form-section {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .label {
+            margin-bottom: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .input {
+            padding: 18px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            font-size: 17px;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #00f5ff;
+            background: rgba(255, 255, 255, 0.16);
+            box-shadow: 0 0 0 6px rgba(0, 245, 255, 0.16);
+        }
+
+        .input::placeholder {
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .checkbox {
+            width: 22px;
+            height: 22px;
+            accent-color: #00f5ff;
+            margin-top: 4px;
+        }
+
+        .terms {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.6;
+        }
+
+        .terms a {
+            color: #00f5ff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .terms a:hover {
+            text-decoration: underline;
+        }
+
+        .submit-btn {
+            padding: 20px 0;
+            background: linear-gradient(135deg, #00f5ff, #ff00ff);
+            color: #0f0f23;
+            border: none;
+            border-radius: 20px;
+            font-size: 19px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 0 16px 50px rgba(0, 245, 255, 0.4);
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 22px 60px rgba(0, 245, 255, 0.52);
+        }
+
+        .back-btn {
+            display: block;
+            width: max-content;
+            margin: 24px auto 0;
+            padding: 14px 32px;
+            color: rgba(255, 255, 255, 0.75);
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-radius: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            color: white;
+            border-color: #00f5ff;
+            background: rgba(0, 245, 255, 0.16);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 40px 16px;
+            }
+
+            .register-container {
+                max-width: 400px;
+                padding: 36px 28px;
+            }
+
+            .logo {
+                font-size: 36px;
+            }
+
+            .title {
+                font-size: 24px;
+            }
+
+            .input {
+                padding: 16px 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="logo">PawMate</div>
+        <h1 class="title">Регистрация</h1>
+
+        <form class="register-form" onsubmit="handleSubmit(event)">
+            <div class="form-section">
+                <div class="form-group">
+                    <label class="label">Ваш Email</label>
+                    <input type="email" class="input" placeholder="your@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="label">Пароль</label>
+                    <input type="password" class="input" placeholder="••••••••••" required minlength="6">
+                </div>
+
+                <div class="form-group">
+                    <label class="label">Повторите пароль</label>
+                    <input type="password" class="input" placeholder="••••••••••" required minlength="6">
+                </div>
+
+                <div class="checkbox-row">
+                    <input type="checkbox" class="checkbox" id="terms" required>
+                    <label for="terms" class="terms">
+                        Согласен с <a href="#">условиями</a> и <a href="#">политикой конфиденциальности</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="submit-btn">✨ Создать аккаунт</button>
+
+                <a href="#" class="back-btn" onclick="history.back()">← Назад</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function handleSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const pass1 = form.querySelector('input[type="password"]');
+            const pass2 = form.querySelectorAll('input[type="password"]')[1];
+
+            if (pass1.value !== pass2.value) {
+                alert('Пароли не совпадают!');
+                pass2.focus();
+                return;
+            }
+        }
+    </script>
+</body>
+</html>

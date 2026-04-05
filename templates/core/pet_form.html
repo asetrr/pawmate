@@ -1,0 +1,23 @@
+﻿{% extends 'base.html' %}
+{% block title %}PawMate | {{ title }}{% endblock %}
+{% block content %}
+<section class="card auth-card">
+  <div class="badge">📝 Карточка питомца</div>
+  <h1>{{ title }}</h1>
+  <p class="form-meta">Чем подробнее профиль, тем точнее будут мэтчи.</p>
+  <form method="post" class="stack-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <label>Имя {{ form.name }}</label>
+    <label>Вид {{ form.species }}</label>
+    <label>Порода {{ form.breed }}</label>
+    <label>Возраст {{ form.age }}</label>
+    <label>Пол {{ form.gender }}</label>
+    <label>Город {{ form.city }}</label>
+    <label>Фото (URL) {{ form.photo_url }}</label>
+    <label>Описание {{ form.bio }}</label>
+    <button class="btn primary" type="submit">Сохранить карточку</button>
+  </form>
+</section>
+{% endblock %}
+
